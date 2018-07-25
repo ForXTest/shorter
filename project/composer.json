@@ -1,0 +1,19 @@
+{
+  "name": "Shortener",
+  "description": "News Rest Api",
+  "authors": [
+    {
+      "name": "Kovaleva Tatiana",
+      "email": "truechudo@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.1.0",
+    "smarty/smarty": "v3.1.27"
+  },
+  "autoload": {
+    "psr-4": {
+      "": "src/"
+    }
+  }
+}
