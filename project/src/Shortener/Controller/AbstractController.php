@@ -14,11 +14,6 @@ use Shortener\Response;
 abstract class AbstractController
 {
     /**
-     * @var \PDO
-     */
-    protected $db;
-
-    /**
      * @var \Smarty
      */
     protected $view;
@@ -41,9 +36,8 @@ abstract class AbstractController
      * @param \Smarty $view
      * @throws \Exception
      */
-    public function __construct(\PDO $db, Request $request, \Smarty $view)
+    public function __construct(Request $request, \Smarty $view)
     {
-        $this->db = $db;
         $this->request = $request;
         $this->setView($view);
         $this->response = new Response();
@@ -61,9 +55,10 @@ abstract class AbstractController
      *
      * @param array $pathVars
      */
-    public function setPathVars(array $pathVars)
+    public function setPathVars(array $pathVars): AbstractController
     {
         $this->pathVars = $pathVars;
+        return $this;
     }
 
     /**
@@ -105,11 +100,12 @@ abstract class AbstractController
      * @param \Smarty $view
      * @throws Exception
      */
-    private function setView(\Smarty $view)
+    private function setView(\Smarty $view): AbstractController
     {
         $this->view = $view;
         if (!is_writable($this->view->getCompileDir())) {
             throw new Exception('The compile directory must be writable');
         }
+        return $this;
     }
 }

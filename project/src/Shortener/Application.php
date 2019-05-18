@@ -30,12 +30,7 @@ class Application
     public function run()
     {
         try {
-            $controller = ControllerFactory::create(
-                $this->di['db'],
-                $this->di['router'],
-                $this->di['request'],
-                $this->di['view']
-            );
+            $controller = ControllerFactory::create($this->di);
             $controller->run();
             return $controller->getResponse();
 

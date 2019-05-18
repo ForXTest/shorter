@@ -23,7 +23,7 @@ class Router
      *
      * @var array
      */
-    private $_pathVars = [];
+    private $pathVars = [];
 
     /**
      * Router constructor.
@@ -47,7 +47,7 @@ class Router
     public function getController(string $url, string $method) : string
     {
         if (empty($this->routes)) {
-            throw new Exception('No routes!');
+            throw new Exception('No routes!', 400);
         }
 
         if (strpos($url, '?') !== false) {
@@ -55,11 +55,11 @@ class Router
         }
 
         foreach ($this->routes as $route) {
-            if ($class = $this->_check($route, $method, $url)) {
+            if ($class = $this->check($route, $method, $url)) {
                 return $class;
             }
         }
-        throw new PageNotFound('Page Not Found');
+        throw new PageNotFound('Page Not Found', 400);
     }
 
     /**
@@ -69,7 +69,7 @@ class Router
      */
     public function getPathVars() : array
     {
-        return $this->_pathVars;
+        return $this->pathVars;
     }
 
     /**
@@ -81,9 +81,9 @@ class Router
      * @return string
      * @throws PageNotFound
      */
-    private function _check(array $route, string $method, string $url) : string
+    private function check(array $route, string $method, string $url) : string
     {
-        if (!$this->_checkMethod($route, $method)) {
+        if (!$this->checkMethod($route, $method)) {
             return false;
         }
 
@@ -99,7 +99,7 @@ class Router
             throw new PageNotFound('Controller "' . $route['class'] . '" doesn\'t exists!');
         }
 
-        $this->_pathVars = array_merge($this->_pathVars, $matches);
+        $this->pathVars = array_merge($this->pathVars, $matches);
         return $route['class'];
     }
 
@@ -109,7 +109,7 @@ class Router
      * @param array $route
      * @return boolean
      */
-    protected function _checkMethod(array $route, string $method) : bool
+    protected function checkMethod(array $route, string $method) : bool
     {
         if (!array_key_exists('methods', $route)) {
             return true;

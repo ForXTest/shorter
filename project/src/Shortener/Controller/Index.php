@@ -3,6 +3,7 @@ namespace Shortener\Controller;
 
 use Shortener\Data\UrlRegestryException;
 use Shortener\Data\UrlRegistry;
+use Shortener\Request;
 
 /**
  * Main Page Controller
@@ -12,6 +13,11 @@ use Shortener\Data\UrlRegistry;
 class Index extends AbstractController
 {
     /**
+     * @var UrlRegistry
+     */
+    protected $urlRegistry;
+
+    /**
      * @var int
      */
     const LENGTH = 10;
@@ -20,6 +26,22 @@ class Index extends AbstractController
      * @var string
      */
     const ALLOW_SYMBOLS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+
+    /**
+     * Constructor
+     *
+     * @param \PDO $db
+     * @param Request $request
+     * @param \Smarty $view
+     * @throws \Exception
+     */
+    public function __construct(Request $request, \Smarty $view, UrlRegistry $urlRegistry)
+    {
+        parent::__construct($request, $view);
+
+        $this->urlRegistry = $urlRegistry;
+    }
 
     /**
      * Run this controller
@@ -42,10 +64,8 @@ class Index extends AbstractController
     {
         $url = trim($this->request->getPost('url'));
 
-        $registry = new UrlRegistry($this->db);
-
         try {
-            $shortUrl = $registry->checkUrl($url);
+            $shortUrl = $this->urlRegistry->checkUrl($url);
         } catch (UrlRegestryException $e) {
             $this->logException($e);
             $this->setAjaxRespose('', 'Internal error!', 500);
@@ -60,7 +80,7 @@ class Index extends AbstractController
         $shortUrl = $this->makeShortUrl();
 
         try {
-            $registry->setUrl($url, $shortUrl);
+            $this->urlRegistry->setUrl($url, $shortUrl);
         } catch (UrlRegestryException $e) {
             $this->logException($e);
             $this->setAjaxRespose('', 'Internal error!', 500);

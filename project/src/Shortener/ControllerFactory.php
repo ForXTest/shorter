@@ -2,6 +2,9 @@
 
 namespace Shortener;
 
+use Shortener\Controller\AbstractController;
+use Shortener\Router\PageNotFound;
+
 /**
  * Class ControllerFactory
  *
@@ -21,10 +24,18 @@ class ControllerFactory
      * @throws Router\Exception
      * @throws Router\PageNotFound
      */
-    static public function create(\PDO $db, Router $router, Request $request, \Smarty $view)
+    static public function create(Container $di): AbstractController
     {
+        $router = $di['router'];
+        $request = $di['request'];
+
         $controllerClass = $router->getController($request->getUrl(), $request->getMethod());
-        $controller = new $controllerClass($db, $request, $view);
+
+        if (!isset($di[$controllerClass])) {
+            throw new PageNotFound('Page Not Found', 400);
+        }
+
+        $controller = $di[$controllerClass];
         $controller->setPathVars($router->getPathVars());
         return $controller;
     }

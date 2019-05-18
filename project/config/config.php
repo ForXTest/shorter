@@ -60,3 +60,25 @@ $config['routes'] = function ($c) {
         ]
     ];
 };
+
+$config[\Shortener\Controller\Redirect::class] = function ($c) {
+    return new \Shortener\Controller\Index(
+        $c['db'],
+        $c['request'],
+        $c['view'],
+        $c[\Shortener\Data\UrlRegistry::class]
+    );
+};
+
+$config[\Shortener\Controller\Redirect::class] = function ($c) {
+    return new \Shortener\Controller\Redirect(
+        $c['db'],
+        $c['request'],
+        $c['view'],
+        $c[\Shortener\Data\UrlRegistry::class]
+    );
+};
+
+$config[\Shortener\Data\UrlRegistry::class] = function ($c) {
+    return new \Shortener\Data\UrlRegistry($c['db']);
+};
