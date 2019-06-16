@@ -1,5 +1,7 @@
 <?php
+
 namespace Shortener;
+
 use Shortener\Router\PageNotFound;
 
 /**
@@ -10,16 +12,16 @@ use Shortener\Router\PageNotFound;
 class Application
 {
     /**
-     * @var Container
+     * @var \ArrayAccess
      */
     private $di;
 
     /**
      * Application constructor.
      *
-     * @param array $config
+     * @param \ArrayAccess $config
      */
-    public function __construct(Container $di)
+    public function __construct(\ArrayAccess $di)
     {
         $this->di = $di;
     }
@@ -27,7 +29,7 @@ class Application
     /**
      * Run controllers
      */
-    public function run()
+    public function run(): Response
     {
         try {
             $controller = ControllerFactory::create($this->di);
@@ -35,13 +37,10 @@ class Application
             return $controller->getResponse();
 
         } catch (PageNotFound $e) {
-            header('HTTP/1.1  404 Not Found', true, 404);
-            return;
+            return (new Response())->setHttpCode(Response::STATUS_NOT_FOUND);
 
         } catch (\Exception $e) {
-            trigger_error($e);
-            header('HTTP/1.1  500 Internal Server Error', true, 500);
-            return;
+            return (new Response())->setHttpCode(Response::STATUS_INTERNAL_ERROR);
         }
     }
 }

@@ -3,8 +3,10 @@
 namespace Shortener\Controller;
 
 use Shortener\Exception;
+use Shortener\LoggerInterface;
 use Shortener\Request;
 use Shortener\Response;
+use Shortener\View;
 
 /**
  * Class AbstractController
@@ -14,7 +16,7 @@ use Shortener\Response;
 abstract class AbstractController
 {
     /**
-     * @var \Smarty
+     * @var View
      */
     protected $view;
 
@@ -24,6 +26,11 @@ abstract class AbstractController
     protected $request;
 
     /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
      * @var array
      */
     protected $pathVars = [];
@@ -31,14 +38,17 @@ abstract class AbstractController
     /**
      * AbstractController constructor.
      *
-     * @param \PDO $db
      * @param Request $request
-     * @param \Smarty $view
+     * @param View $view
      * @throws \Exception
      */
-    public function __construct(Request $request, \Smarty $view)
-    {
+    public function __construct(
+        Request $request,
+        View $view,
+        LoggerInterface $logger
+    ) {
         $this->request = $request;
+        $this->logger = $logger;
         $this->setView($view);
         $this->response = new Response();
     }
@@ -55,7 +65,7 @@ abstract class AbstractController
      *
      * @param array $pathVars
      */
-    public function setPathVars(array $pathVars): AbstractController
+    public function setPathVars(array $pathVars): self
     {
         $this->pathVars = $pathVars;
         return $this;
@@ -66,7 +76,7 @@ abstract class AbstractController
      *
      * @return Response
      */
-    public function getResponse() : Response
+    public function getResponse(): Response
     {
         return $this->response;
     }
@@ -84,28 +94,19 @@ abstract class AbstractController
     }
 
     /**
-     * Log a exception
-     *
-     * @param \Throwable $e
-     */
-    protected function logException(\Throwable $e)
-    {
-        error_log($e);
-    }
-
-
-    /**
      * Set a template engine
      *
      * @param \Smarty $view
      * @throws Exception
      */
-    private function setView(\Smarty $view): AbstractController
+    private function setView(\Smarty $view): self
     {
         $this->view = $view;
-        if (!is_writable($this->view->getCompileDir())) {
+
+        if (!$this->view->checkIsWritableCompileDir()) {
             throw new Exception('The compile directory must be writable');
         }
+
         return $this;
     }
 }

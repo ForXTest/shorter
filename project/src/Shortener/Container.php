@@ -26,7 +26,7 @@ class Container implements \ArrayAccess
      *
      * @param array $values
      */
-    public function __construct(array $values = array())
+    public function __construct(array $values = [])
     {
         foreach ($values as $key => $value) {
             $this->offsetSet($key, $value);
@@ -39,7 +39,7 @@ class Container implements \ArrayAccess
      * @param string $key
      * @param mixed $value
      */
-    public function offsetSet($key, $value)
+    public function offsetSet($key, $value): void
     {
         $this->values[$key] = $value;
     }
@@ -74,7 +74,7 @@ class Container implements \ArrayAccess
      * @param mixed $key
      * @return bool
      */
-    public function offsetExists($key) : bool
+    public function offsetExists($key): bool
     {
         return isset($this->values[$key]);
     }
@@ -84,7 +84,7 @@ class Container implements \ArrayAccess
      *
      * @param mixed $id
      */
-    public function offsetUnset($id)
+    public function offsetUnset($id): void
     {
         if (!isset($this->values[$id])) {
             return;

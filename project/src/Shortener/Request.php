@@ -13,7 +13,7 @@ class Request
      *
      * @return string
      */
-    public function getHost()
+    public function getHost(): string
     {
         return $this->getServer('REQUEST_SCHEME') . '://' . $this->getServer('HTTP_HOST') . '/';
     }
@@ -46,7 +46,7 @@ class Request
      *
      * @return string
      */
-    public function getUrl() : string
+    public function getUrl(): string
     {
         return $this->getServer('REQUEST_URI', '');
     }
@@ -57,7 +57,7 @@ class Request
      *
      * @return string
      */
-    public function getMethod() : string
+    public function getMethod(): string
     {
         return strtoupper($this->getServer('REQUEST_METHOD', ''));
     }

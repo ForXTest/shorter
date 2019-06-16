@@ -44,10 +44,10 @@ class Router
      * @throws Exception
      * @throws PageNotFound
      */
-    public function getController(string $url, string $method) : string
+    public function getController(string $url, string $method): string
     {
         if (empty($this->routes)) {
-            throw new Exception('No routes!', 400);
+            throw new Exception('No routes!');
         }
 
         if (strpos($url, '?') !== false) {
@@ -59,7 +59,8 @@ class Router
                 return $class;
             }
         }
-        throw new PageNotFound('Page Not Found', 400);
+
+        throw new PageNotFound('Page Not Found');
     }
 
     /**
@@ -81,26 +82,49 @@ class Router
      * @return string
      * @throws PageNotFound
      */
-    private function check(array $route, string $method, string $url) : string
+    private function check(array $route, string $method, string $url): string
     {
+        $this->checkRouteIsCorrect($route);
+
         if (!$this->checkMethod($route, $method)) {
             return false;
+        }
+
+        if (!preg_match($this->prepareRouteRegexp($route['url']), urldecode($url), $matches)) {
+            return false;
+        }
+
+        if (!class_exists($route['class'])) {
+            throw new PageNotFound(sprintf('Controller "%s" doesn\'t exists!', $route['class']));
+        }
+
+        $this->pathVars = array_merge($this->pathVars, $matches);
+
+        return $route['class'];
+    }
+
+    /**
+     * @param array $route
+     * @throws Exception
+     */
+    private function checkRouteIsCorrect(array $route): void
+    {
+        if (empty($route['url'])) {
+            throw new Exception('Url for route is not specified');
         }
 
         if (empty($route['class'])) {
             throw new Exception('Controller is not specified');
         }
+    }
 
-        if (!preg_match('/^' . strtr(trim($route['url']), ['/'  => '\/']) . '\/*$/iu', urldecode($url), $matches)) {
-            return false;
-        }
-
-        if (!class_exists($route['class'])) {
-            throw new PageNotFound('Controller "' . $route['class'] . '" doesn\'t exists!');
-        }
-
-        $this->pathVars = array_merge($this->pathVars, $matches);
-        return $route['class'];
+    /**
+     * @param string $routeRegexp
+     * @return string
+     */
+    private function prepareRouteRegexp(string $routeRegexp): string
+    {
+        return sprintf('/^%s\/*$/iuU', strtr(trim($routeRegexp), ['/'  => '\/']));
     }
 
     /**
@@ -109,12 +133,14 @@ class Router
      * @param array $route
      * @return boolean
      */
-    protected function checkMethod(array $route, string $method) : bool
+    private function checkMethod(array $route, string $method): bool
     {
         if (!array_key_exists('methods', $route)) {
             return true;
         }
+
         $methods = array_map('strtoupper', array_filter((array)$route['methods']));
-        return in_array($method, $methods);
+
+        return in_array(strtoupper($method), $methods);
     }
 }

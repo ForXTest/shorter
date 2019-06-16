@@ -4,7 +4,9 @@ namespace Shortener\Controller;
 use Shortener\Data\UrlRegestryException;
 use Shortener\Data\UrlRegistry;
 use Shortener\Exception\InternalException;
+use Shortener\LoggerInterface;
 use Shortener\Request;
+use Shortener\View;
 
 /**
  * Redirect Page Controller
@@ -18,17 +20,21 @@ class Redirect extends AbstractController
      */
     protected $urlRegistry;
 
+
     /**
-     * Constructor
-     *
-     * @param \PDO $db
      * @param Request $request
-     * @param \Smarty $view
+     * @param View $view
+     * @param LoggerInterface $logger
+     * @param UrlRegistry $urlRegistry
      * @throws \Exception
      */
-    public function __construct(Request $request, \Smarty $view, UrlRegistry $urlRegistry)
-    {
-        parent::__construct($request, $view);
+    public function __construct(
+        Request $request,
+        View $view,
+        LoggerInterface $logger,
+        UrlRegistry $urlRegistry
+    ) {
+        parent::__construct($request, $view, $logger);
 
         $this->urlRegistry = $urlRegistry;
     }
@@ -38,18 +44,20 @@ class Redirect extends AbstractController
      *
      * @throws InternalException
      */
-    public function run()
+    public function run(): void
     {
         try {
             $fullUrl = $this->urlRegistry->getFullUrl($this->getPathVar('shortUrl'));
         } catch (UrlRegestryException $e) {
-            throw new InternalException('Database Error', 0, $e);
+            $this->logger->logException($e);
+            throw new InternalException('Database Error', $e->getCode(), $e);
         }
 
         if (empty($fullUrl)) {
             $this->response->setRedirect('/');
             return;
         }
+
         $this->response->setRedirect($fullUrl);
     }
 }

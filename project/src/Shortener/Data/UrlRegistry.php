@@ -2,6 +2,8 @@
 
 namespace Shortener\Data;
 
+use Shortener\DatabaseInterface;
+
 /**
  * Class UrlRegistry
  *
@@ -10,7 +12,7 @@ namespace Shortener\Data;
 class UrlRegistry
 {
     /**
-     * @var \PDO
+     * @var DatabaseInterface
      */
     private $db;
 
@@ -22,9 +24,9 @@ class UrlRegistry
     /**
      * UrlRegistry constructor.
      *
-     * @param \PDO $db
+     * @param DatabaseInterface $db
      */
-    public function __construct(\PDO $db)
+    public function __construct(DatabaseInterface $db)
     {
         $this->db = $db;
     }
@@ -36,10 +38,11 @@ class UrlRegistry
      * @return string
      * @throws UrlRegestryException
      */
-    public function checkUrl(string $url) : string
+    public function checkUrl(string $url): string
     {
         try {
-            $query = $this->db->prepare("SELECT short FROM {$this->table} WHERE hash = :hash LIMIT 1");
+            $query = $this->db->getConnection()
+                ->prepare("SELECT short FROM {$this->table} WHERE hash = :hash LIMIT 1");
             $query->execute(['hash' => $this->getHash($url)]);
             $result = $query->fetch(\PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
@@ -56,7 +59,7 @@ class UrlRegistry
      * @param string $shortUrl
      * @throws UrlRegestryException
      */
-    public function setUrl(string $url, string $shortUrl)
+    public function setUrl(string $url, string $shortUrl): void
     {
         $data = [
             ':short' => $shortUrl,
@@ -65,11 +68,12 @@ class UrlRegistry
         ];
 
         try {
-            $query = $this->db->prepare("
-                  INSERT INTO $this->table
+            $query = $this->db->getConnection()
+                ->prepare("
+                  INSERT INTO {$this->table}
                     (short, hash, link)
                   VALUES (:short, :hash, :link)
-            ");
+                ");
             $query->execute($data);
         } catch (\PDOException $e) {
             throw new UrlRegestryException('Database error', 0, $e);
@@ -83,15 +87,17 @@ class UrlRegistry
      * @return string
      * @throws UrlRegestryException
      */
-    public function getFullUrl(string $shortUrl) : string
+    public function getFullUrl(string $shortUrl): string
     {
         try {
-            $query = $this->db->prepare("SELECT link FROM {$this->table} WHERE short = :short LIMIT 1");
-            $query->execute(['short' => $shortUrl]);
+            $query = $this->db->getConnection()
+                ->prepare("SELECT link FROM {$this->table} WHERE short = :short LIMIT 1");
+            $query->execute([':short' => $shortUrl]);
             $result = $query->fetch(\PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             throw new UrlRegestryException('Database error', 0, $e);
         }
+
         return $result['link'] ?? '';
     }
 
@@ -101,7 +107,7 @@ class UrlRegistry
      * @param string $url
      * @return string
      */
-    private function getHash(string $url) : string
+    private function getHash(string $url): string
     {
         return md5($url);
     }

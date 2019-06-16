@@ -14,28 +14,29 @@ $config['mysql'] = function ($c) {
 };
 
 $config['db'] = function ($c) {
+
     $db = $c['mysql'];
-    if (empty($db['host']) || empty($db['dbname']) || empty($db['user']) || empty($db['pass'])) {
-        throw new \Shortener\Exception\InternalException('Error Establishing a Database Connection');
-    }
-    try {
-        $pdo = new \PDO("mysql:host=" . $db['host'] . ";dbname=" . $db['dbname'], $db['user'], $db['pass']);
-    } catch (\PDOException $e) {
-        throw new \Shortener\Exception\InternalException($e->getMessage(), $e->getCode());
-    }
-    $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-    return $pdo;
+
+    return new \Shortener\DatabaseMysql(
+        $db['host'],
+        $db['user'],
+        $db['pass'],
+        $db['dbname']
+    );
 };
 
 $config['view'] = function ($c) {
-    $view = new \Smarty;
+    $view = new \Shortener\View();
     $view->setTemplateDir(ROOT_PATH . 'templates/');
     $view->setCompileDir('/var/www/templates_cmpl/');
     $view->setDebugging(false);
     $view->setCompileCheck(false);
     $view->setForceCompile(false);
     return $view;
+};
+
+$config[\Shortener\Logger::class] = function ($c) {
+    return new \Shortener\Logger();
 };
 
 $config['request'] = function ($c) {
@@ -61,11 +62,12 @@ $config['routes'] = function ($c) {
     ];
 };
 
-$config[\Shortener\Controller\Redirect::class] = function ($c) {
+$config[\Shortener\Controller\Index::class] = function ($c) {
     return new \Shortener\Controller\Index(
         $c['db'],
         $c['request'],
         $c['view'],
+        $c[\Shortener\Logger::class],
         $c[\Shortener\Data\UrlRegistry::class]
     );
 };
@@ -75,6 +77,7 @@ $config[\Shortener\Controller\Redirect::class] = function ($c) {
         $c['db'],
         $c['request'],
         $c['view'],
+        $c[\Shortener\Logger::class],
         $c[\Shortener\Data\UrlRegistry::class]
     );
 };

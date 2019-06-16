@@ -16,23 +16,22 @@ class ControllerFactory
     /**
      * Create a page controller
      *
-     * @param \PDO $db
-     * @param Router $router
-     * @param Request $request
-     * @param \Smarty $view
-     * @return mixed
-     * @throws Router\Exception
-     * @throws Router\PageNotFound
+     * @param \ArrayAccess $di
+     * @return AbstractController
+     * @throws PageNotFound
      */
-    static public function create(Container $di): AbstractController
+    static public function create(\ArrayAccess $di): AbstractController
     {
+        /** @var Router $request */
         $router = $di['router'];
+
+        /** @var Request $request */
         $request = $di['request'];
 
         $controllerClass = $router->getController($request->getUrl(), $request->getMethod());
 
         if (!isset($di[$controllerClass])) {
-            throw new PageNotFound('Page Not Found', 400);
+            throw new PageNotFound('Page Not Found');
         }
 
         $controller = $di[$controllerClass];

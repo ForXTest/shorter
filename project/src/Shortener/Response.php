@@ -30,15 +30,27 @@ class Response
      */
     private $headers = [];
 
+    /** @var int  */
+    public const STATUS_OK = 200;
+
+    /** @var int  */
+    public const STATUS_MOVED_PERMANENTLY = 301;
+
+    /** @var int  */
+    public const STATUS_NOT_FOUND = 404;
+
+    /** @var int  */
+    public const STATUS_INTERNAL_ERROR = 500;
+
     /**
      * HTTP response status codes
      *
      * @var array
      */
-    const STATUS_DESCRIPTIONS = [
+    private const STATUS_DESCRIPTIONS = [
         100 => 'Continue',
         101 => 'Switching Protocols',
-        200 => 'OK',
+        self::STATUS_OK => 'OK',
         201 => 'Created',
         202 => 'Accepted',
         203 => 'Non-Authoritative Information',
@@ -46,7 +58,7 @@ class Response
         205 => 'Reset Content',
         206 => 'Partial Content',
         300 => 'Multiple Choices',
-        301 => 'Moved Permanently',
+        self::STATUS_MOVED_PERMANENTLY => 'Moved Permanently',
         302 => 'Found',
         303 => 'See Other',
         304 => 'Not Modified',
@@ -55,7 +67,7 @@ class Response
         400 => 'Bad Request',
         401 => 'Unauthorized',
         403 => 'Forbidden',
-        404 => 'Not Found',
+        self::STATUS_NOT_FOUND => 'Not Found',
         405 => 'Method Not Allowed',
         406 => 'Not Acceptable',
         407 => 'Proxy Authentication Required',
@@ -69,7 +81,7 @@ class Response
         415 => 'Unsupported Media Type',
         416 => 'Requested Range Not Satisfiable',
         417 => 'Expectation Failed',
-        500 => 'Internal Server Error',
+        self::STATUS_INTERNAL_ERROR => 'Internal Server Error',
         501 => 'Not Implemented',
         502 => 'Bad Gateway',
         503 => 'Service Unavailable',
@@ -82,9 +94,10 @@ class Response
      *
      * @return string
      */
-    public function __toString() : string
+    public function __toString(): string
     {
         $this->sendHeaders();
+
         return $this->body;
     }
 
@@ -94,15 +107,25 @@ class Response
      * @param mixed $body
      * @return $this
      */
-    public function setBody($body) : Response
+    public function setBody($body): self
     {
         if (!is_string($body)) {
             $this->body = json_encode($body);
             $this->setHeader('Content-Type', 'application/json');
+
             return $this;
         }
         $this->body = $body;
+
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBody(): string
+    {
+        return $this->body;
     }
 
     /**
@@ -112,13 +135,22 @@ class Response
      * @param string $value header value
      * @return Response
      */
-    public function setHeader(string $name, string $value) : Response
+    public function setHeader(string $name, string $value): self
     {
         $this->headers[$name] = [
             'name' => $name,
             'value' => $value
         ];
+
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
     }
 
     /**
@@ -127,10 +159,19 @@ class Response
      * @param int $code
      * @return Response
      */
-    public function setHttpCode(int $code) : Response
+    public function setHttpCode(int $code): self
     {
         $this->code = $code;
+
         return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getHttpCode(): int
+    {
+        return $this->code;
     }
 
     /**
@@ -139,22 +180,25 @@ class Response
      * @param string $url
      * @return Response
      */
-    public function setRedirect(string $url) : Response
+    public function setRedirect(string $url): self
     {
-        $this->setHttpCode(302);
-        $this->setHeader('Location', $url, 302);
+        $this->setHttpCode(self::STATUS_MOVED_PERMANENTLY);
+        $this->setHeader('Location', $url, self::STATUS_MOVED_PERMANENTLY);
+
         return $this;
     }
 
     /**
      * Send headers
      */
-    private function sendHeaders()
+    private function sendHeaders(): void
     {
         header("HTTP/1.1 {$this->code} " . self::STATUS_DESCRIPTIONS[$this->code] ?? 'Unknown', true, $this->code);
+
         if (empty($this->headers)) {
             return;
         }
+
         foreach ($this->headers as $header) {
             header("{$header['name']}: {$header['value']}", true, $header['code']);
         }
